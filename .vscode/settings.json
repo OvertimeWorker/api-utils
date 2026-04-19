@@ -1,0 +1,15 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.sortPackageJson": "always"
+  },
+  "files.eol": "\n",
+
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "package.json": "pnpm-lock.yaml, .pnpm-debug.log, .prettier*, prettier*, eslint*, .eslint*, LICENSE*, README*, .npmrc",
+    ".gitignore": ".gitattributes",
+    ".env": ".env*"
+  }
+}
