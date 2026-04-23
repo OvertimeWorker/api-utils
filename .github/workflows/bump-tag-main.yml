@@ -1,0 +1,43 @@
+name: Auto Bump and Tag Main Version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    # Prevents the workflow from triggering itself in a loop
+    if: "!contains(github.event.head_commit.message, 'chore: bump api-utils version')"
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Using GITHUB_TOKEN is fine, but ensures the push has write access
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Bump Version and Push
+        run: |
+          # 1. Bump version (patch), update package.json, and create commit/tag
+          # 2. [skip ci] is added as an extra safeguard for CI loops
+          NEW_VERSION=$(npm version patch -m "chore: bump api-utils version to %s [skip ci]")
+
+          echo "Successfully bumped to $NEW_VERSION"
+
+          # Push both the new commit and the new tag to main
+          git push origin main --follow-tags
