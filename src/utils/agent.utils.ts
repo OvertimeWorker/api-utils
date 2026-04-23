@@ -1,4 +1,4 @@
-import axios from "axios"
+import axios, { AxiosError } from "axios"
 import { GatewayTimeoutException, InternalException } from "../exceptions/internal.exception.js"
 import { StatusCodes } from "http-status-codes"
 import { ForbiddenException, InvalidTokenException } from "../exceptions/auth.exception.js"
@@ -7,7 +7,8 @@ import { BadRequestException } from "../exceptions/badRequests.exception.js"
 import { ValidationException } from "~/exceptions/validate.exception.js"
 import { requestContext } from "./context.utils.js"
 import { ErrorCodes } from "~/consts/error.const.js"
-import type { ApiResponse, ServiceClient } from "~/types/agent.types.js"
+import type { ServiceClient } from "~/types/agent.types.js"
+import type { ApiResponse } from "~/types/express.types.js"
 
 const createServiceClient = (baseURL: string, internalSecret: string, timeout = 8000) => {
   const instance = axios.create({
@@ -58,62 +59,69 @@ const createServiceClient = (baseURL: string, internalSecret: string, timeout = 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = response.data as ApiResponse<any>
 
-      if (data && data.success === false) {
-        throw new InternalException(data.error?.code, data.message, data.error?.details)
+      if (data.success === false) {
+        throw new InternalException(data.error.code, data.message, data.error.details)
       }
 
       return data.data
     },
-    (error) => {
+    (error: AxiosError) => {
+      if (error.config?.internalMeta?.internalSecret === false) {
+        throw error
+      }
+
       const remoteStatus = error.response?.status || StatusCodes.SERVICE_UNAVAILABLE
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const remoteData = error.response?.data as ApiResponse<any>
+      const remoteData = error.response?.data as ApiResponse | undefined
 
       // Handle Network/Timeout failures
       if (!error.response || remoteStatus === StatusCodes.SERVICE_UNAVAILABLE) {
         throw new GatewayTimeoutException()
       }
 
-      // Handle Path Not Found
-      if (remoteData?.error?.code === ErrorCodes.PATH_NOT_FOUND.code) {
+      if (remoteData?.success === false) {
+        // Handle Path Not Found
+        if (remoteData.error.code === ErrorCodes.PATH_NOT_FOUND.code) {
+          throw new InternalException(
+            remoteData.error.code,
+            remoteData.message,
+            remoteData.error.details,
+          )
+        }
+
+        // Handle Auth failures
+        if (remoteStatus === StatusCodes.UNAUTHORIZED) {
+          throw new InvalidTokenException(remoteData.error.code, remoteData.message)
+        }
+        if (remoteStatus === StatusCodes.FORBIDDEN) {
+          throw new ForbiddenException(remoteData.error.code, remoteData.message)
+        }
+
+        // Handle Validation failures
+        if (remoteData.error.code === ErrorCodes.VALIDATION_FAILED.code) {
+          throw new ValidationException(
+            remoteData.error.details as ConstructorParameters<typeof ValidationException>[0],
+          )
+        }
+
+        // Handle Bad Requests
+        if (remoteStatus === StatusCodes.BAD_REQUEST) {
+          throw new BadRequestException(remoteData.error.code, remoteData.message)
+        }
+
+        // Handle Not Found
+        if (remoteStatus === StatusCodes.NOT_FOUND) {
+          throw new NotFoundException(remoteData.error.code, remoteData.message)
+        }
+
+        // Handle Other Errors
         throw new InternalException(
-          remoteData?.error?.code,
-          remoteData?.message,
-          remoteData?.error?.details,
+          remoteData.error.code,
+          remoteData.message,
+          remoteData.error.details,
         )
       }
 
-      // Handle Auth failures
-      if (remoteStatus === StatusCodes.UNAUTHORIZED) {
-        throw new InvalidTokenException(remoteData?.error?.code, remoteData?.message)
-      }
-      if (remoteStatus === StatusCodes.FORBIDDEN) {
-        throw new ForbiddenException(remoteData?.error?.code, remoteData?.message)
-      }
-
-      // Handle Validation failures
-      if (remoteData?.error?.code === ErrorCodes.VALIDATION_FAILED.code) {
-        throw new ValidationException(
-          remoteData?.error?.details as ConstructorParameters<typeof ValidationException>[0],
-        )
-      }
-
-      // Handle Bad Requests
-      if (remoteStatus === StatusCodes.BAD_REQUEST) {
-        throw new BadRequestException(remoteData?.error?.code, remoteData?.message)
-      }
-
-      // Handle Not Found
-      if (remoteStatus === StatusCodes.NOT_FOUND) {
-        throw new NotFoundException(remoteData?.error?.code, remoteData?.message)
-      }
-
-      // Handle Other Errors
-      throw new InternalException(
-        remoteData?.error?.code,
-        remoteData?.message,
-        remoteData?.error?.details,
-      )
+      throw error
     },
   )
 

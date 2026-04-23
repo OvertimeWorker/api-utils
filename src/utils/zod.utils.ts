@@ -39,7 +39,7 @@ function normalizeToDecimalInput(val: string | number | DecimalJsLike): string |
   }
 
   // Prisma DecimalJsLike usually has toString()
-  if (val && typeof val.toString === "function") {
+  if (typeof val.toString === "function") {
     return val.toString()
   }
 

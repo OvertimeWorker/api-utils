@@ -1,5 +1,5 @@
 class HttpException<T = unknown | undefined> extends Error {
-  code: number
+  code?: number
   override message: string
   details: T
   statusCode: number

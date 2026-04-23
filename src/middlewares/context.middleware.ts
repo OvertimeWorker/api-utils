@@ -13,7 +13,7 @@ function getClientIp(req: Request) {
   const forwarded = req.get("x-forwarded-for")
 
   if (forwarded && typeof forwarded === "string") {
-    const ip = forwarded?.split(",")[0]?.trim()
+    const ip = forwarded.split(",")[0]?.trim()
     if (ip === "::1" || ip === "::ffff:127.0.0.1") {
       return "127.0.0.1"
     }

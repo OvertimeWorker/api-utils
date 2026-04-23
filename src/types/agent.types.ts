@@ -11,16 +11,6 @@ declare module "axios" {
   }
 }
 
-type ApiResponse<T = unknown> = {
-  success: boolean
-  data: T | null
-  message?: string
-  error?: {
-    code: number
-    details: unknown
-  }
-}
-
 type ServiceClient = Omit<AxiosInstance, "get" | "post" | "put" | "delete"> & {
   get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>
   post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>
@@ -28,4 +18,4 @@ type ServiceClient = Omit<AxiosInstance, "get" | "post" | "put" | "delete"> & {
   delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>
 }
 
-export type { ApiResponse, ServiceClient }
+export type { ServiceClient }

@@ -46,21 +46,44 @@ type AuthOptions = {
 
 type AuthConfig = boolean | AuthOptions | undefined
 
+type ApiResponse<T = unknown> =
+  | {
+      success: true
+      message: string
+      data: T | null
+    }
+  | {
+      success: false
+      message: string
+      error: {
+        code: number
+        details?: unknown
+      }
+    }
+
 type RequestWithDynamicPerms<S extends RequestSchemaStructure, A extends AuthConfig> = A extends {
   fetchPerms: true
 }
   ? ValidatedRequestWithUser<S> & { user: { permissions: PermissionKey[] } }
   : Omit<ValidatedRequestWithUser<S>, "user"> & { user: Omit<AuthUser, "permissions"> }
 
-interface AuthControllerConfig<S extends RequestSchemaStructure, A extends AuthConfig> {
+type ControllerHandler<S extends RequestSchemaStructure, A extends AuthConfig | undefined> =
+  // Handlers that use 'res' (return void)
+  | ((
+      req: A extends AuthConfig ? RequestWithDynamicPerms<S, A> : ValidatedRequest<S>,
+      res: Response,
+    ) => Promise<void>)
+  // Handlers that skip 'res' (must return ControllerHandlerResponse)
+  | ((
+      req: A extends AuthConfig ? RequestWithDynamicPerms<S, A> : ValidatedRequest<S>,
+    ) => Promise<ControllerHandlerResponse>)
+
+type ControllerHandlerResponse<T = unknown> = ApiResponse<T> & { statusCode?: number }
+
+interface ControllerConfig<S extends RequestSchemaStructure, A extends AuthConfig | undefined> {
   schema?: S
-  auth: A
-  handler: (req: RequestWithDynamicPerms<S, A>, res: Response) => any
-}
-interface StandardControllerConfig<S extends RequestSchemaStructure> {
-  schema?: S
-  auth?: never
-  handler: (req: ValidatedRequest<S>, res: Response) => any
+  auth?: A
+  handler: ControllerHandler<S, A>
 }
 
 export type {
@@ -77,6 +100,7 @@ export type {
   ValidatedRequestWithUser,
   RequestSchemaStructure,
   AuthConfig,
-  AuthControllerConfig,
-  StandardControllerConfig,
+  ControllerConfig,
+  ApiResponse,
+  ControllerHandlerResponse,
 }

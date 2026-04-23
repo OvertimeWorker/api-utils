@@ -1,48 +1,50 @@
 import type { RequestHandler } from "express"
-import { z, ZodError } from "zod"
+import { StatusCodes } from "http-status-codes"
+import { ZodError } from "zod"
 import { ValidationException } from "~/exceptions/validate.exception.js"
 import { handleAuth } from "~/middlewares/auth.middleware.js"
 import { handleValidation } from "~/middlewares/validate.middleware.js"
 import type {
   AuthConfig,
-  AuthControllerConfig,
+  ControllerConfig,
+  ControllerHandlerResponse,
   RequestSchemaStructure,
-  StandardControllerConfig,
 } from "~/types/express.types.js"
 
-// Overloads
-function defineController<S extends RequestSchemaStructure, A extends AuthConfig>(
-  config: AuthControllerConfig<S, A>,
-): RequestHandler
-function defineController<S extends RequestSchemaStructure>(
-  config: StandardControllerConfig<S>,
-): RequestHandler
-
-// Implementation
 function defineController<
-  S extends RequestSchemaStructure = z.ZodObject,
-  A extends AuthConfig = AuthConfig,
->(config: AuthControllerConfig<S, A> | StandardControllerConfig<S>): RequestHandler {
-  return async (req, res) => {
+  S extends RequestSchemaStructure,
+  A extends AuthConfig | undefined = undefined,
+>(config: ControllerConfig<S, A>): RequestHandler {
+  return async (req, res, next) => {
     try {
-      // Execute Auth Middleware
+      // Execute Auth Logic
       if (config.auth) {
         const authOptions = typeof config.auth === "object" ? config.auth : undefined
-        await handleAuth(req as Parameters<typeof handleAuth>[0], authOptions)
+        await handleAuth(req as never, authOptions)
       }
 
       // Execute Zod Validation
       if (config.schema) {
-        await handleValidation(req as Parameters<typeof handleValidation>[0], config.schema)
+        await handleValidation(req as never, config.schema)
       }
 
       // Execute Handler
-      await config.handler(req, res)
+      if (config.handler.length === 1) {
+        // Only 1 arg (req) => Promise<ControllerHandlerResponse>
+
+        const { statusCode, ...result } = await (
+          config.handler as (req: unknown) => Promise<ControllerHandlerResponse>
+        )(req)
+
+        res.status(statusCode ?? StatusCodes.OK).json(result)
+      } else {
+        await (config.handler as (req: unknown, res: unknown) => Promise<void>)(req, res)
+      }
     } catch (err: unknown) {
       if (err instanceof ZodError) {
-        throw new ValidationException(err.issues)
+        return next(new ValidationException(err.issues))
       }
-      throw err
+      next(err)
     }
   }
 }

@@ -91,6 +91,8 @@ export default [
       },
     },
     rules: {
+      "@typescript-eslint/no-unnecessary-condition": "error",
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "warn",

@@ -1,9 +1,10 @@
 import type { Request, Response, NextFunction } from "express"
 import { z } from "zod"
 import { ValidationException } from "../exceptions/validate.exception.js"
+import type { RequestSchemaStructure } from "~/types/express.types.js"
 
 const ValidateMiddleware =
-  (schema: RequestSchemaStructure) => async (req: Request, res: Response, next: NextFunction) => {
+  (schema: RequestSchemaStructure) => async (req: Request, _res: Response, next: NextFunction) => {
     await handleValidation(req, schema)
     next()
   }
@@ -20,7 +21,7 @@ async function handleValidation(req: Request, schema: RequestSchemaStructure) {
     req.body = validated.body ?? {}
 
     if (validated.query) {
-      Object.keys(req.query).forEach((key) => delete (req.query as any)[key])
+      Object.keys(req.query).forEach((key) => delete req.query[key])
       Object.assign(req.query, validated.query)
     }
 

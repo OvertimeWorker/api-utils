@@ -16,11 +16,11 @@ const ErrorMiddleware = (error: Error, _req: Request, res: Response, _next: Next
     )
   }
 
-  const { statusCode, message, code, details } = exception
+  const { message, code, details } = exception
   // eslint-disable-next-line no-console
   console.error(error.stack)
 
-  res.status(statusCode ?? StatusCodes.INTERNAL_SERVER_ERROR).json({
+  res.status(exception.code ?? StatusCodes.INTERNAL_SERVER_ERROR).json({
     statusCode: code,
     statusDesc: "failed",
     success: false,
