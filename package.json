@@ -4,6 +4,9 @@
   "license": "GPL-3.0",
   "author": "wjnotl",
   "type": "module",
+  "bin": {
+    "gen-metadata": "scripts/generate-metadata.js"
+  },
   "scripts": {
     "prebuild": "pnpm generate",
     "build": "tsc",
@@ -12,6 +15,7 @@
     "lint:fix": "eslint . --ext .ts,.js --fix"
   },
   "dependencies": {
+    "@prisma/generator-helper": "7.5.0",
     "axios": "1.15.0",
     "http-status-codes": "2.3.0",
     "jsonwebtoken": "9.0.3",

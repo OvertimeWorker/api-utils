@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@prisma/generator-helper':
+        specifier: 7.5.0
+        version: 7.5.0
       axios:
         specifier: 1.15.0
         version: 1.15.0
@@ -154,6 +157,18 @@ packages:
         optional: true
       typescript:
         optional: true
+
+  '@prisma/debug@7.5.0':
+    resolution: {integrity: sha512-163+nffny0JoPEkDhfNco0vcuT3ymIJc9+WX7MHSQhfkeKUmKe9/wqvGk5SjppT93DtBjVwr5HPJYlXbzm6qtg==}
+
+  '@prisma/dmmf@7.5.0':
+    resolution: {integrity: sha512-MAIM8Uji/UuT6PokBwfOHtLHV2GTPpeAwcaFDqNvSZR+rbxrV/gJeLuOjmSnFkGpro/Y0un4oxAkUO7mGQeY6g==}
+
+  '@prisma/generator-helper@7.5.0':
+    resolution: {integrity: sha512-qxV/cqoGyKpt9sKlH5k2FoMlpo7gr/dnb2QvCfOaeWYEFanKQLjRE4lr5MovCq3ihfW5oeOpwuiSqz5SG5nlJg==}
+
+  '@prisma/generator@7.5.0':
+    resolution: {integrity: sha512-GwXeQQ3PFN6EPLCXN8lNjQfC1ssE7wm8AMm7kR8Xbi00REiBn7rB4G5QieW1Nv7zl9rqrpAfG5gfOUU0GAaA+w==}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -1193,6 +1208,18 @@ snapshots:
       '@prisma/client-runtime-utils': 7.5.0
     optionalDependencies:
       typescript: 6.0.3
+
+  '@prisma/debug@7.5.0': {}
+
+  '@prisma/dmmf@7.5.0': {}
+
+  '@prisma/generator-helper@7.5.0':
+    dependencies:
+      '@prisma/debug': 7.5.0
+      '@prisma/dmmf': 7.5.0
+      '@prisma/generator': 7.5.0
+
+  '@prisma/generator@7.5.0': {}
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
