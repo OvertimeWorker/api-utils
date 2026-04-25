@@ -1,0 +1,33 @@
+name: Check Code Quality
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      image_path: ${{ steps.strings.outputs.IMAGE_PATH }}
+    steps:
+      - id: strings
+        run: |
+          echo "IMAGE_PATH=$(echo ghcr.io/${{ github.repository_owner }}/node-ci | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: prepare
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.prepare.outputs.image_path }}:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Lint
+        run: pnpm lint
