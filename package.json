@@ -28,6 +28,7 @@
     "prepare": "pnpm build"
   },
   "dependencies": {
+    "@candoimage/prisma-extension-soft-delete": "2.1.1",
     "@prisma/generator-helper": "7.5.0",
     "axios": "1.15.0",
     "cli-table3": "0.6.5",

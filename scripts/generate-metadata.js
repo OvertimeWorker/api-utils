@@ -7,7 +7,7 @@ helper.generatorHandler({
   onManifest() {
     return {
       prettyName: 'Prisma Models Metadata',
-      defaultOutput: 'generated',
+      defaultOutput: 'generated/dmmf-models',
     }
   },
   async onGenerate(options) {
